@@ -1,2 +1,2 @@
-opcua==0.98.13
+asyncua==1.0.1
 azure-iot-device==2.12.0
