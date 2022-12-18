@@ -1,5 +1,5 @@
 from asyncua import Client
-from asyncio import get_event_loop, sleep
+from asyncio import get_event_loop, sleep, gather
 from agent import Agent
 from config import Config
 
@@ -22,9 +22,10 @@ async def main():
 
         agents.append(agent)
 
-        while True:
-          await agent.send_telemetry()
-          await sleep(1)
+    while True:
+      for agent in agents:
+        await gather(*agent.get_tasks())
+      await sleep(1)
 
 
 if __name__ == '__main__':
