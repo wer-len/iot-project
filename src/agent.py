@@ -19,6 +19,14 @@ class Agent:
     self.iot_client.on_method_request_received = self.on_method_request_received
 
     self.tasks = []
+    self.errors = []
+
+  @property
+  async def subscribed_nodes(self):
+    return [
+      await self.device.get_child('ProductionRate'),
+      await self.device.get_child('DeviceError')
+    ]
 
   def get_tasks(self):
     tasks = [*self.tasks, self.send_telemetry()]
@@ -78,5 +86,27 @@ class Agent:
       response = MethodResponse.create_from_method_request(method_request, 404, 'Nieznana metoda')
     self.iot_client.send_method_response(response)
     
-    
+  async def datachange_notification(self, node, value, _):
+    prop_name = (await node.read_browse_name()).Name
+    print('Zmiana wartości ' + prop_name + ' na ' + str(value))
+
+    if prop_name == 'DeviceError':
+      self.errors.clear()
+      errors = {
+        1: 'Emergency Stop',
+        2: 'Power Failure',
+        4: 'Sensor Failure',
+        8: 'Unknown'
+      }
+
+      for error_value in errors:
+        if value & error_value:
+          if errors[error_value] not in self.errors:
+            self.errors.append(errors[error_value])
+            self.send_message({'DeviceError': errors[error_value]}, 'event')
+            self.iot_client.patch_twin_reported_properties({"LastErrorDate": datetime.now().isoformat()})
+      self.iot_client.patch_twin_reported_properties({"DeviceError": self.errors})
+
+    elif prop_name == 'ProductionRate':
+      self.iot_client.patch_twin_reported_properties({"ProductionRate": value})
   
