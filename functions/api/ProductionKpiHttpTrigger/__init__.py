@@ -12,7 +12,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     registry_manager = IoTHubRegistryManager(os.environ["ConnectionString"])
     for device in req_body:
-        if float(device["ProductionKPI"]) < 90:
+        if float(device["kpi"]) < 90:
             twin = registry_manager.get_twin(device["ConnectionDeviceId"])
             twin.properties.desired["ProductionRate"] = twin.properties.reported["ProductionRate"] - 10
             registry_manager.update_twin(device["ConnectionDeviceId"], twin, twin.etag)

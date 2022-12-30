@@ -37,7 +37,7 @@ GROUP BY
 HAVING count(message_type) > 3
 
 --- awaryjne zatrzymanie dla funkcji
-SELECT ih.IoTHub.ConnectionDeviceId, COUNT(message_type) as errors
+SELECT ih.IoTHub.ConnectionDeviceId, COUNT(message_type) as errors_count
 INTO [asa-out-emergency-stop-http-trigger]
 FROM [asa-in] ih TIMESTAMP by EventEnqueuedUtcTime
 WHERE message_type = 'event'
